@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useQuery, gql } from '@apollo/client';
 import styled from 'styled-components';
-import { CharactersData, CharactersSchema, Character } from '../../schemas'; // Assuming you have defined CharactersSchema in schemas.ts
+import { CharactersData, CharactersSchema } from '../../schemas'; // Assuming you have defined CharactersSchema in schemas.ts
+import CharactersList from '../CharactersList';
 
 const GET_CHARACTERS = gql`
   query GetCharacters($name: String) {
@@ -16,28 +17,8 @@ const GET_CHARACTERS = gql`
     }
   }
 `;
-// type CharacterType = infer<typeof CharactersSchema>['characters']['results'][0];
 
-const CharacterList = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-around;
-`;
 
-const CharacterCard = styled.div`
-  border: 1px solid #ccc;
-  border-radius: 10px;
-  margin: 10px;
-  padding: 10px;
-  width: 200px;
-  text-align: center;
-`;
-
-const CharacterImage = styled.img`
-  border-radius: 10px;
-  width: 100%;
-  height: auto;
-`;
 
 const SearchInput = styled.input`
   margin: 20px;
@@ -69,16 +50,7 @@ const Characters: React.FC = () => {
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
-        <CharacterList>
-          {validatedData.characters.results.map((character: Character) => (
-            <CharacterCard key={character.id}>
-              <CharacterImage src={character.image} alt={character.name} />
-              <h3>{character.name}</h3>
-              <p>{character.species}</p>
-              <p>{character.status}</p>
-            </CharacterCard>
-          ))}
-        </CharacterList>
+        <CharactersList characters={validatedData.characters.results} />
       </div>
     );
   } catch (validationError) {
