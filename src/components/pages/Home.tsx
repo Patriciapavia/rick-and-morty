@@ -3,6 +3,7 @@ import { useQuery, gql } from '@apollo/client';
 import styled from 'styled-components';
 import { CharactersData, CharactersSchema, Character } from '../../schemas'; // Assuming you have defined CharactersSchema in schemas.ts
 import CharactersList from '../CharactersList';
+import SearchBar from '../SearchInput';
 
 const GET_CHARACTERS = gql`
   query GetCharacters($name: String, $page: Int!) {
@@ -21,12 +22,6 @@ const GET_CHARACTERS = gql`
   }
 `;
 
-const SearchInput = styled.input`
-  margin: 20px;
-  padding: 10px;
-  width: 80%;
-  max-width: 400px;
-`;
 const ErrorText = styled.p`
   color: red;
 `;
@@ -37,14 +32,16 @@ const Characters: React.FC = () => {
   const [characters, setCharacters] = useState<Character[]>([]);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
 
-  const { loading, error, data, fetchMore } = useQuery<{
-    characters: CharactersData;
-  }>(GET_CHARACTERS, {
+  const { loading, error, data, fetchMore } = useQuery<{ characters: CharactersData }>(GET_CHARACTERS, {
     variables: { name: searchTerm, page },
     notifyOnNetworkStatusChange: true,
     onCompleted: (data) => {
       const validatedData = CharactersSchema.parse(data);
-      setCharacters((prev) => [...prev, ...validatedData.characters.results]);
+      if (page === 1) {
+        setCharacters(validatedData.characters.results);
+      } else {
+        setCharacters((prev) => [...prev, ...validatedData.characters.results]);
+      }
       setIsFetchingMore(false);
     },
   });
@@ -94,9 +91,7 @@ const Characters: React.FC = () => {
   try {
     return (
       <div>
-        <SearchInput
-          type='text'
-          placeholder='Search characters'
+        <SearchBar
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
