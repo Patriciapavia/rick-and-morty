@@ -26,7 +26,7 @@ const ErrorText = styled.p`
   color: red;
 `;
 
-const Characters: React.FC = () => {
+const Home: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(1);
   const [characters, setCharacters] = useState<Character[]>([]);
@@ -105,4 +105,4 @@ const Characters: React.FC = () => {
   }
 };
 
-export default Characters;
+export default Home;
