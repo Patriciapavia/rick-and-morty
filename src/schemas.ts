@@ -10,9 +10,10 @@ export const CharacterSchema = z.object({
   __typename: z.literal('Character'),
 });
 export const InfoSchema = z.object({
-  next: z.number(),
-  pages: z.number(),
-  count: z.number(),
+  next: z.number().nullable(),
+  prev: z.number().nullable(),
+  pages: z.number().nullable(),
+  count: z.number().nullable(),
   __typename: z.literal('Info'),
 });
 export const CharactersSchema = z.object({
@@ -24,22 +25,22 @@ export const CharactersSchema = z.object({
 });
 
 export const EpisodeSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  air_date: z.string(),
+  episode: z.string(),
+});
+
+export const CharacterDetailSchema = z.object({
+  character: z.object({
     id: z.string(),
     name: z.string(),
-    air_date: z.string(),
-    episode: z.string(),
-  });
-
-  export const CharacterDetailSchema = z.object({
-    character: z.object({
-      id: z.string(),
-      name: z.string(),
-      image: z.string(),
-      species: z.string(),
-      status: z.string(),
-      episode: z.array(EpisodeSchema),
-    }),
-  });
+    image: z.string(),
+    species: z.string(),
+    status: z.string(),
+    episode: z.array(EpisodeSchema),
+  }),
+});
 
 export type Character = z.infer<typeof CharacterSchema>;
 export type CharactersData = z.infer<typeof CharactersSchema>;

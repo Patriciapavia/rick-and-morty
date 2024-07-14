@@ -37,6 +37,11 @@ const PaginationContainer = styled.div`
   justify-content: center;
   margin-top: 20px;
 `;
+const NoCharactersFound = styled.p`
+  color: gray;
+  text-align: center;
+  margin-top: 20px;
+`;
 
 const PaginationButton = styled.button`
   margin: 0 5px;
@@ -52,12 +57,12 @@ const PaginationButton = styled.button`
     cursor: not-allowed;
   }
 `;
-
 const Home: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(1);
   const [characters, setCharacters] = useState<Character[]>([]);
   const [pagesCount, setPagesCount] = useState(0);
+  const [currentPageGroup, setCurrentPageGroup] = useState(1);
 
   const { loading, error, data, refetch, fetchMore } = useQuery<{
     characters: CharactersData;
@@ -65,6 +70,7 @@ const Home: React.FC = () => {
     variables: { name: searchTerm, page },
     notifyOnNetworkStatusChange: true,
     onCompleted: (data) => {
+      console.log(data.characters.characters.results, 'data000000');
       const validatedData = CharactersSchema.parse(data);
       setCharacters(validatedData.characters.results);
       setPagesCount(validatedData.characters.info.pages || 0);
@@ -75,6 +81,7 @@ const Home: React.FC = () => {
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
     setPage(1); // Reset to the first page when the search term changes
+    setCharacters([]); // Clear the characters list when the search term changes
   };
 
   const handlePageChange = useCallback(
@@ -93,36 +100,74 @@ const Home: React.FC = () => {
     },
     [fetchMore, page, searchTerm]
   );
+  const getPageGroup = (group: number) => {
+    const start = (group - 1) * 5 + 1;
+    return Array.from(
+      { length: Math.min(5, pagesCount - start + 1) },
+      (_, index) => start + index
+    );
+  };
 
   useEffect(() => {
     refetch({ name: searchTerm, page });
   }, [page, searchTerm, refetch]);
+
+
+  useEffect(() => {
+    if (data) {
+      const validatedData = CharactersSchema.parse(data);
+      setCharacters(validatedData.characters.results);
+      setPagesCount(validatedData?.characters?.info?.pages || 0);
+    }
+  }, [data]);
+  console.log(data, 'data');
+  console.log(characters, 'characters');
+  console.log(characters.length, 'characters.length');
   return (
     <>
-      {loading && <p>Loading...</p>}
-      {error && <ErrorText>Error: {error.message}</ErrorText>}
-      {characters.length > 0 && (
-        <div>
-          <SearchBar value={searchTerm} onChange={handleSearchChange} />
-
-          <CharactersList characters={characters} />
-
-          <PaginationContainer>
-            {Array.from({ length: pagesCount }, (_, index) => index + 1).map(
-              (pageNum) => (
-                <PaginationButton
-                  key={pageNum}
-                  onClick={() => handlePageChange(pageNum)}
-                  disabled={page === pageNum}
-                >
-                  {pageNum}
-                </PaginationButton>
-              )
-            )}
-          </PaginationContainer>
-        </div>
+    <SearchBar value={searchTerm} onChange={handleSearchChange} />
+    {loading && <p>Loading...</p>}
+    {error && <ErrorText>Error: {error.message}</ErrorText>}
+    {!loading && !error && characters.length === 0 && (
+        <NoCharactersFound>No characters found</NoCharactersFound>
       )}
-    </>
+    {characters.length > 0 && (
+      <div>
+        <CharactersList characters={characters} />
+        <PaginationContainer>
+          <PaginationButton
+            onClick={() => setCurrentPageGroup((prev) => Math.max(prev - 1, 1))}
+            disabled={currentPageGroup === 1}
+          >
+            {'<'}
+          </PaginationButton>
+          {getPageGroup(currentPageGroup).map((pageNum) => (
+            <PaginationButton
+              key={pageNum}
+              onClick={() => handlePageChange(pageNum)}
+              disabled={page === pageNum}
+            >
+              {pageNum}
+            </PaginationButton>
+          ))}
+          <PaginationButton
+            onClick={() =>
+              setCurrentPageGroup((prev) => {
+                const nextGroup = prev + 1;
+                return nextGroup <= Math.ceil(pagesCount / 5)
+                  ? nextGroup
+                  : prev;
+              })
+            }
+            disabled={currentPageGroup === Math.ceil(pagesCount / 5)}
+          >
+            {'>'}
+          </PaginationButton>
+        </PaginationContainer>
+      </div>
+    )}
+  </>
+
   );
 };
 
