@@ -9,9 +9,15 @@ export const CharacterSchema = z.object({
   status: z.string(),
   __typename: z.literal('Character'),
 });
-
+export const InfoSchema = z.object({
+  next: z.number(),
+  pages: z.number(),
+  count: z.number(),
+  __typename: z.literal('Info'),
+});
 export const CharactersSchema = z.object({
   characters: z.object({
+    info: InfoSchema,
     results: z.array(CharacterSchema),
     __typename: z.literal('Characters'),
   }),

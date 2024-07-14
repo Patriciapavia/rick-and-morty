@@ -10,6 +10,10 @@ const GET_CHARACTERS = gql`
     characters(page: $page, filter: { name: $name }) {
       info {
         next
+        prev
+        pages
+        count
+        __typename
       }
       results {
         id
@@ -17,7 +21,9 @@ const GET_CHARACTERS = gql`
         image
         species
         status
+        __typename
       }
+      __typename
     }
   }
 `;
@@ -26,83 +32,98 @@ const ErrorText = styled.p`
   color: red;
 `;
 
+const PaginationContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+`;
+
+const PaginationButton = styled.button`
+  margin: 0 5px;
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+
+  &:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+  }
+`;
+
 const Home: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(1);
   const [characters, setCharacters] = useState<Character[]>([]);
-  const [isFetchingMore, setIsFetchingMore] = useState(false);
+  const [pagesCount, setPagesCount] = useState(0);
 
-  const { loading, error, data, fetchMore } = useQuery<{ characters: CharactersData }>(GET_CHARACTERS, {
+  const { loading, error, data, refetch, fetchMore } = useQuery<{
+    characters: CharactersData;
+  }>(GET_CHARACTERS, {
     variables: { name: searchTerm, page },
     notifyOnNetworkStatusChange: true,
     onCompleted: (data) => {
       const validatedData = CharactersSchema.parse(data);
-      if (page === 1) {
-        setCharacters(validatedData.characters.results);
-      } else {
-        setCharacters((prev) => [...prev, ...validatedData.characters.results]);
-      }
-      setIsFetchingMore(false);
+      setCharacters(validatedData.characters.results);
+      setPagesCount(validatedData.characters.info.pages || 0);
     },
   });
 
-  const handleLoadMore = useCallback(() => {
-    setIsFetchingMore(true);
-    fetchMore({
-      variables: {
-        page: page + 1,
-        name: searchTerm,
-      },
-      updateQuery: (prev, { fetchMoreResult }) => {
-        if (!fetchMoreResult) return prev;
-        const validatedData = CharactersSchema.parse(fetchMoreResult);
-        return {
-          characters: {
-            ...fetchMoreResult.characters,
-            results: [
-              ...prev.characters.characters.results,
-              ...validatedData.characters.results,
-            ],
-          },
-        };
-      },
-    });
-    setPage((prevPage) => prevPage + 1);
-  }, [data, fetchMore, searchTerm]);
 
-  const handleScroll = useCallback(() => {
-    if (
-      window.innerHeight + document.documentElement.scrollTop !==
-        document.documentElement.offsetHeight ||
-      isFetchingMore
-    )
-      return;
-    handleLoadMore();
-  }, [isFetchingMore, handleLoadMore]);
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+    setPage(1); // Reset to the first page when the search term changes
+  };
+
+  const handlePageChange = useCallback(
+    (newPage: number) => {
+      if (newPage === page) return;
+      setPage(newPage);
+      fetchMore({
+        variables: { name: searchTerm, page: newPage },
+        updateQuery: (prev, { fetchMoreResult }) => {
+          if (!fetchMoreResult) return prev;
+          const validatedData = CharactersSchema.parse(fetchMoreResult);
+          setCharacters(validatedData.characters.results);
+          return fetchMoreResult;
+        },
+      });
+    },
+    [fetchMore, page, searchTerm]
+  );
 
   useEffect(() => {
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [handleScroll]);
+    refetch({ name: searchTerm, page });
+  }, [page, searchTerm, refetch]);
+  return (
+    <>
+      {loading && <p>Loading...</p>}
+      {error && <ErrorText>Error: {error.message}</ErrorText>}
+      {characters.length > 0 && (
+        <div>
+          <SearchBar value={searchTerm} onChange={handleSearchChange} />
 
-  if (loading) return <p>Loading...</p>;
-  if (error) return <ErrorText>Error: {error.message}</ErrorText>;
+          <CharactersList characters={characters} />
 
-  try {
-    return (
-      <div>
-        <SearchBar
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-        <CharactersList characters={characters} />
-        {isFetchingMore && <p>Loading more...</p>}
-      </div>
-    );
-  } catch (validationError) {
-    console.error('Validation error:', validationError);
-    return <ErrorText>Error: Invalid data received</ErrorText>;
-  }
+          <PaginationContainer>
+            {Array.from({ length: pagesCount }, (_, index) => index + 1).map(
+              (pageNum) => (
+                <PaginationButton
+                  key={pageNum}
+                  onClick={() => handlePageChange(pageNum)}
+                  disabled={page === pageNum}
+                >
+                  {pageNum}
+                </PaginationButton>
+              )
+            )}
+          </PaginationContainer>
+        </div>
+      )}
+    </>
+  );
 };
 
 export default Home;
