@@ -5,6 +5,9 @@ import styled from 'styled-components';
 import { CharacterDetailSchema } from '../../schemas';
 import Spinner from '../Spinner';
 import { Alert, AlertIcon } from '@chakra-ui/react';
+import { Link as RouterLink } from 'react-router-dom';
+import { Link as ChakraLink } from '@chakra-ui/react';
+
 const GET_CHARACTER_DETAIL = gql`
   query GetCharacterDetail($id: ID!) {
     character(id: $id) {
@@ -84,6 +87,16 @@ const CharacterDetail: React.FC = () => {
           ))}
         </ul>
       </CharacterInfo>
+      <ChakraLink
+        as={RouterLink}
+        to='/'
+        color='blue.500'
+        fontSize='lg'
+        fontWeight='bold'
+        _hover={{ textDecoration: 'underline' }}
+      >
+        Back to home
+      </ChakraLink>
     </Container>
   );
 };
