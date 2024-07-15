@@ -8,6 +8,7 @@ type SpinnerProps = {
 const Spinner = ({ size = 'xl', color = 'blue' }: SpinnerProps) => {
   return (
     <Box
+      data-testid='spinner'
       height='80vh'
       display='flex'
       justifyContent='center'

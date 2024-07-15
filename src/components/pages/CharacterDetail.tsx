@@ -8,7 +8,7 @@ import { Alert, AlertIcon } from '@chakra-ui/react';
 import { Link as RouterLink } from 'react-router-dom';
 import { Link as ChakraLink } from '@chakra-ui/react';
 
-const GET_CHARACTER_DETAIL = gql`
+export const GET_CHARACTER_DETAIL = gql`
   query GetCharacterDetail($id: ID!) {
     character(id: $id) {
       id
@@ -58,7 +58,7 @@ const CharacterDetail: React.FC = () => {
     );
   if (error)
     return (
-      <p>
+      <p data-testid='error'>
         Error:
         <Alert status='error'>
           <AlertIcon />

@@ -5,9 +5,9 @@ import { CharactersData, CharactersSchema, Character } from '../../schemas'; // 
 import CharactersList from '../CharactersList';
 import SearchBar from '../SearchInput';
 import Spinner from '../Spinner';
-import { Alert, AlertIcon } from '@chakra-ui/react';
+import { Alert, AlertIcon, Box } from '@chakra-ui/react';
 
-const GET_CHARACTERS = gql`
+export const GET_CHARACTERS = gql`
   query GetCharacters($name: String, $page: Int!) {
     characters(page: $page, filter: { name: $name }) {
       info {
@@ -125,8 +125,10 @@ const Home: React.FC = () => {
 
   return (
     <>
-      <SearchBar value={searchTerm} onChange={handleSearchChange} />
-
+      <Box textAlign='center' fontSize='xl' fontWeight='bold' p={4}>
+        Rick and Morty Characters
+      </Box>
+        <SearchBar value={searchTerm} onChange={handleSearchChange} />
       {loading && <Spinner />}
       {error && (
         <Alert status='error'>
