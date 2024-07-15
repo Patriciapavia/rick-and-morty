@@ -23,6 +23,11 @@ A web application to browse and search for Rick and Morty characters using React
 
 1. run `npm install` or `yarn install` to install the dependencies.
 2. run `npm start` or `yarn start` to start the development server.
+
+## Conect to GraphQL API
+1. run locally use `VITE_GRAPHQL_URI=/graphql` in `.env` file
+2. run on production environment use `VITE_GRAPHQL_URI=https://rickandmortyapi.com/graphql` in `.env.production` file
+
 ### Run tests
 
 Run `npm test` or `yarn test` to run the tests.
