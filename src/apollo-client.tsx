@@ -1,8 +1,12 @@
 import React, { ReactNode } from 'react';
-import { ApolloClient, InMemoryCache, ApolloProvider as Provider } from '@apollo/client';
+import { ApolloClient, InMemoryCache, ApolloProvider as Provider , HttpLink} from '@apollo/client';
+
+const httpLink = new HttpLink({
+  uri: import.meta.env.VITE_GRAPHQL_URI,
+});
 
 const client = new ApolloClient({
-  uri: '/graphql', // Use the proxy path
+  link: httpLink,
   cache: new InMemoryCache(),
 });
 
