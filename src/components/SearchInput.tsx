@@ -6,6 +6,8 @@ const SearchInput = styled.input`
   padding: 10px;
   width: 80%;
   max-width: 400px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
 `;
 
 interface SearchBarProps {

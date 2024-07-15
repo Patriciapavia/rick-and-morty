@@ -4,6 +4,8 @@ import styled from 'styled-components';
 import { CharactersData, CharactersSchema, Character } from '../../schemas'; // Assuming you have defined CharactersSchema in schemas.ts
 import CharactersList from '../CharactersList';
 import SearchBar from '../SearchInput';
+import Spinner from '../Spinner';
+import { Alert, AlertIcon } from '@chakra-ui/react';
 
 const GET_CHARACTERS = gql`
   query GetCharacters($name: String, $page: Int!) {
@@ -26,10 +28,6 @@ const GET_CHARACTERS = gql`
       __typename
     }
   }
-`;
-
-const ErrorText = styled.p`
-  color: red;
 `;
 
 const PaginationContainer = styled.div`
@@ -64,19 +62,23 @@ const Home: React.FC = () => {
   const [pagesCount, setPagesCount] = useState(0);
   const [currentPageGroup, setCurrentPageGroup] = useState(1);
 
-  const { loading, error, data, refetch, fetchMore } = useQuery<{
+  const {
+    loading = true,
+    error,
+    data,
+    refetch,
+    fetchMore,
+  } = useQuery<{
     characters: CharactersData;
   }>(GET_CHARACTERS, {
     variables: { name: searchTerm, page },
     notifyOnNetworkStatusChange: true,
     onCompleted: (data) => {
-      console.log(data.characters.characters.results, 'data000000');
       const validatedData = CharactersSchema.parse(data);
       setCharacters(validatedData.characters.results);
       setPagesCount(validatedData.characters.info.pages || 0);
     },
   });
-
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
@@ -100,6 +102,7 @@ const Home: React.FC = () => {
     },
     [fetchMore, page, searchTerm]
   );
+
   const getPageGroup = (group: number) => {
     const start = (group - 1) * 5 + 1;
     return Array.from(
@@ -112,7 +115,6 @@ const Home: React.FC = () => {
     refetch({ name: searchTerm, page });
   }, [page, searchTerm, refetch]);
 
-
   useEffect(() => {
     if (data) {
       const validatedData = CharactersSchema.parse(data);
@@ -120,54 +122,60 @@ const Home: React.FC = () => {
       setPagesCount(validatedData?.characters?.info?.pages || 0);
     }
   }, [data]);
-  console.log(data, 'data');
-  console.log(characters, 'characters');
-  console.log(characters.length, 'characters.length');
+
   return (
     <>
-    <SearchBar value={searchTerm} onChange={handleSearchChange} />
-    {loading && <p>Loading...</p>}
-    {error && <ErrorText>Error: {error.message}</ErrorText>}
-    {!loading && !error && characters.length === 0 && (
+      <SearchBar value={searchTerm} onChange={handleSearchChange} />
+
+      {loading && <Spinner />}
+      {error && (
+        <Alert status='error'>
+          <AlertIcon />
+          Error: {error.message}
+        </Alert>
+      )}
+
+      {!loading && !error && characters.length === 0 && (
         <NoCharactersFound>No characters found</NoCharactersFound>
       )}
-    {characters.length > 0 && (
-      <div>
-        <CharactersList characters={characters} />
-        <PaginationContainer>
-          <PaginationButton
-            onClick={() => setCurrentPageGroup((prev) => Math.max(prev - 1, 1))}
-            disabled={currentPageGroup === 1}
-          >
-            {'<'}
-          </PaginationButton>
-          {getPageGroup(currentPageGroup).map((pageNum) => (
+      {data && (
+        <div>
+          <CharactersList characters={characters} />
+          <PaginationContainer>
             <PaginationButton
-              key={pageNum}
-              onClick={() => handlePageChange(pageNum)}
-              disabled={page === pageNum}
+              onClick={() =>
+                setCurrentPageGroup((prev) => Math.max(prev - 1, 1))
+              }
+              disabled={currentPageGroup === 1}
             >
-              {pageNum}
+              {'<'}
             </PaginationButton>
-          ))}
-          <PaginationButton
-            onClick={() =>
-              setCurrentPageGroup((prev) => {
-                const nextGroup = prev + 1;
-                return nextGroup <= Math.ceil(pagesCount / 5)
-                  ? nextGroup
-                  : prev;
-              })
-            }
-            disabled={currentPageGroup === Math.ceil(pagesCount / 5)}
-          >
-            {'>'}
-          </PaginationButton>
-        </PaginationContainer>
-      </div>
-    )}
-  </>
-
+            {getPageGroup(currentPageGroup).map((pageNum) => (
+              <PaginationButton
+                key={pageNum}
+                onClick={() => handlePageChange(pageNum)}
+                disabled={page === pageNum}
+              >
+                {pageNum}
+              </PaginationButton>
+            ))}
+            <PaginationButton
+              onClick={() =>
+                setCurrentPageGroup((prev) => {
+                  const nextGroup = prev + 1;
+                  return nextGroup <= Math.ceil(pagesCount / 5)
+                    ? nextGroup
+                    : prev;
+                })
+              }
+              disabled={currentPageGroup === Math.ceil(pagesCount / 5)}
+            >
+              {'>'}
+            </PaginationButton>
+          </PaginationContainer>
+        </div>
+      )}
+    </>
   );
 };
 

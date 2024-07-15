@@ -12,12 +12,6 @@ const CharacterCardContainer = styled.div`
   text-align: center;
 `;
 
-const CharacterImage = styled.img`
-  border-radius: 10px;
-  width: 100%;
-  height: auto;
-`;
-
 interface CharacterCardProps {
   character: Character;
 }
@@ -26,7 +20,13 @@ const CharacterCard: React.FC<CharacterCardProps> = ({ character }) => {
   return (
     <CharacterCardContainer>
       <Link to={`/character/${character.id}`}>
-        <CharacterImage src={character.image} alt={character.name} />
+        <img
+          src={character.image}
+          alt={character.name}
+          loading='lazy'
+          width={200}
+          height={200}
+        />
         <h3>{character.name}</h3>
         <p>{character.species}</p>
         <p>{character.status}</p>
