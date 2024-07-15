@@ -30,7 +30,8 @@ Run `npm test` or `yarn test` to run the tests.
 ### Project Structure
 
 src/
-├── assets/             # Images and static assets
+├── assets/   
+# Images and static assets
 │   ├── logo.png
 │   ├── react.svg
 ├── components/         # React components
